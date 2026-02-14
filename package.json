@@ -1,0 +1,33 @@
+{
+  "name": "termi-host",
+  "version": "0.1.0",
+  "description": "Access your terminal from anywhere through a web browser",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "terminal",
+    "web-terminal",
+    "xterm",
+    "pty",
+    "websocket",
+    "web-based-terminal"
+  ],
+  "author": "vpbgkt",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vpbgkt/termi-host.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "node-pty": "^1.1.0",
+    "ws": "^8.19.0"
+  }
+}

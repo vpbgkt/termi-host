@@ -1,0 +1,22 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "0.0.0.0"
+  },
+  "terminal": {
+    "shell": "bash",
+    "cols": 80,
+    "rows": 24,
+    "scrollback": 1000,
+    "cwd": null
+  },
+  "authentication": {
+    "enabled": false,
+    "username": "admin",
+    "password": "changeme"
+  },
+  "security": {
+    "allowOrigins": ["*"],
+    "maxConnections": 1
+  }
+}

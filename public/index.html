@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>termi-host - Web Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="header">
+    <div class="logo">
+      <h1>🖥️ termi-host</h1>
+      <p class="tagline">Web-based Terminal Access</p>
+    </div>
+    <div id="status">
+      <span id="status-indicator" class="status-disconnected">●</span>
+      <span id="status-text">Disconnected</span>
+    </div>
+  </div>
+  
+  <div id="terminal-container">
+    <div id="terminal"></div>
+  </div>
+
+  <div id="footer">
+    <div class="info">
+      <span>Press <kbd>Ctrl+C</kbd> to interrupt</span>
+      <span>•</span>
+      <span>Right-click to paste</span>
+    </div>
+    <div class="credits">
+      <a href="https://github.com/vpbgkt/termi-host" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <!-- xterm.js -->
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
