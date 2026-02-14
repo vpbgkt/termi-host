@@ -1,5 +1,7 @@
 # termi-host - Hackathon Feature Showcase
 
+(This file is preserved for historical reference of the hackathon submission. For current documentation, see README.md)
+
 ## 🏆 Project Overview
 **termi-host** is an AI-assisted, production-ready web-based terminal hosting solution built for security-conscious environments with minimal resource requirements.
 
