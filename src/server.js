@@ -70,21 +70,28 @@ let terminal = null;
 
 // WebSocket upgrade handler with authentication
 server.on('upgrade', (request, socket, head) => {
-  const sessionParser = session({
-    secret: config.get('authentication.sessionSecret') || 'termi-host-secret-' + Math.random().toString(36),
-    resave: false,
-    saveUninitialized: false
-  });
+  // Parse cookies first
+  const cookieParser = require('cookie-parser');
+  cookieParser()(request, {}, () => {
+    // Then parse session
+    const sessionParser = session({
+      secret: config.get('authentication.sessionSecret') || 'termi-host-secret-' + Math.random().toString(36),
+      resave: false,
+      saveUninitialized: false
+    });
 
-  sessionParser(request, {}, () => {
-    if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
-      return;
-    }
+    sessionParser(request, {}, () => {
+      if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
+        console.log('WebSocket upgrade denied - not authenticated');
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
 
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
+      console.log('WebSocket upgrade accepted - authenticated');
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
     });
   });
 });
