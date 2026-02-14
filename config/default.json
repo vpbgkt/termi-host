@@ -13,7 +13,7 @@
   "authentication": {
     "enabled": true,
     "username": "admin",
-    "password": "changeme",
+    "password": "admin",
     "sessionSecret": "change-this-to-random-string"
   },
   "security": {
