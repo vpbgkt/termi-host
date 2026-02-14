@@ -21,7 +21,13 @@ router.post('/login', (req, res) => {
     // If auth is disabled, auto-login
     req.session.authenticated = true;
     req.session.username = 'anonymous';
-    return res.json({ success: true, message: 'Authentication disabled' });
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: 'Session save failed' });
+      }
+      return res.json({ success: true, message: 'Authentication disabled' });
+    });
+    return;
   }
   
   const correctUsername = config.get('authentication.username');
@@ -34,10 +40,18 @@ router.post('/login', (req, res) => {
   if (username === correctUsername && hashedInput === hashedStored) {
     req.session.authenticated = true;
     req.session.username = username;
-    return res.json({ success: true, message: 'Login successful' });
+    
+    // Save session before responding
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ success: false, message: 'Session save failed' });
+      }
+      return res.json({ success: true, message: 'Login successful' });
+    });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
-  
-  res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
 
 // Logout endpoint
