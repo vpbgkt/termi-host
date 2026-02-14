@@ -1,30 +1,14 @@
-// Initialize xterm.js terminal
+// Initialize xterm.js terminal with saved theme
+const savedTheme = getSavedTheme();
+const selectedTheme = themes[savedTheme] || themes.default;
+
 const terminal = new Terminal({
   cursorBlink: true,
   fontSize: 14,
   fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-  theme: {
-    background: '#1e1e1e',
-    foreground: '#d4d4d4',
-    cursor: '#4ec9b0',
-    black: '#000000',
-    red: '#cd3131',
-    green: '#0dbc79',
-    yellow: '#e5e510',
-    blue: '#2472c8',
-    magenta: '#bc3fbc',
-    cyan: '#11a8cd',
-    white: '#e5e5e5',
-    brightBlack: '#666666',
-    brightRed: '#f14c4c',
-    brightGreen: '#23d18b',
-    brightYellow: '#f5f543',
-    brightBlue: '#3b8eea',
-    brightMagenta: '#d670d6',
-    brightCyan: '#29b8db',
-    brightWhite: '#e5e5e5'
-  },
-  allowProposedApi: true
+  theme: selectedTheme,
+  allowProposedApi: true,
+  scrollback: 1000
 });
 
 // Fit addon for responsive terminal
@@ -59,6 +43,29 @@ function setStatus(status) {
 let ws;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
+let pingInterval;
+let lastPingTime = 0;
+
+// Theme selector
+const themeSelector = document.getElementById('themeSelector');
+if (themeSelector) {
+  themeSelector.value = savedTheme;
+  themeSelector.addEventListener('change', (e) => {
+    applyTheme(terminal, e.target.value);
+  });
+}
+
+// Latency monitoring
+function updateLatency() {
+  const latencyEl = document.getElementById('latency');
+  if (latencyEl && ws && ws.readyState === WebSocket.OPEN) {
+    const ping = Date.now() - lastPingTime;
+    if (ping > 0 && ping < 5000) {
+      latencyEl.textContent = `Latency: ${ping}ms`;
+      latencyEl.style.color = ping < 100 ? '#4ec9b0' : ping < 300 ? '#dcdcaa' : '#f48771';
+    }
+  }
+}
 
 function connect() {
   setStatus('connecting');
@@ -75,6 +82,14 @@ function connect() {
     
     // Send initial terminal size
     sendResize();
+    
+    // Start ping/pong for latency monitoring
+    pingInterval = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        lastPingTime = Date.now();
+        updateLatency();
+      }
+    }, 2000);
   };
   
   ws.onmessage = (event) => {
@@ -85,15 +100,17 @@ function connect() {
   ws.onclose = () => {
     console.log('WebSocket closed');
     setStatus('disconnected');
+    clearInterval(pingInterval);
     
     // Attempt to reconnect
     if (reconnectAttempts < maxReconnectAttempts) {
       reconnectAttempts++;
       const delay = Math.min(1000 * reconnectAttempts, 5000);
       console.log(`Reconnecting in ${delay}ms... (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+      terminal.write(`\r\n\x1b[1;33m⚠ Connection lost. Reconnecting in ${delay/1000}s...\x1b[0m\r\n`);
       setTimeout(connect, delay);
     } else {
-      terminal.write('\r\n\x1b[1;31mConnection lost. Refresh the page to reconnect.\x1b[0m\r\n');
+      terminal.write('\r\n\x1b[1;31m✗ Connection lost. Refresh the page to reconnect.\x1b[0m\r\n');
     }
   };
   

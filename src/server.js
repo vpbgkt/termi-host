@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 const http = require('http');
 const WebSocket = require('ws');
 const pty = require('node-pty');
@@ -25,7 +26,28 @@ const AUTH_ENABLED = config.get('authentication.enabled');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session configuration
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Rate limiting for login attempts (prevent brute force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: 'Too many login attempts, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to auth routes
+app.use('/api/auth/login', loginLimiter);
+
+// Session configuration with timeout
 app.use(session({
   secret: config.get('authentication.sessionSecret') || 'termi-host-secret-' + Math.random().toString(36),
   resave: false,
@@ -33,7 +55,7 @@ app.use(session({
   cookie: {
     secure: false, // Set to true if using HTTPS
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 30 * 60 * 1000 // 30 minutes session timeout
   }
 }));
 
@@ -70,11 +92,13 @@ server.on('upgrade', (request, socket, head) => {
 // WebSocket connection handler
 wss.on('connection', (ws) => {
   console.log('Client connected (authenticated)');
+  
+  let ptyProcess = null;
 
-  // Spawn PTY if not already running
-  if (!terminal) {
+  // Spawn PTY for this connection (lightweight)
+  try {
     console.log(`Spawning shell: ${SHELL}`);
-    terminal = pty.spawn(SHELL, [], {
+    ptyProcess = pty.spawn(SHELL, [], {
       name: 'xterm-color',
       cols: TERMINAL_COLS,
       rows: TERMINAL_ROWS,
@@ -82,25 +106,43 @@ wss.on('connection', (ws) => {
       env: process.env
     });
 
-    // PTY output -> WebSocket
-    terminal.on('data', (data) => {
-      try {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(data);
-        }
-      } catch (err) {
-        console.error('Error sending to WebSocket:', err);
+    // PTY output -> WebSocket (with buffering for performance)
+    let buffer = '';
+    let bufferTimeout = null;
+
+    ptyProcess.on('data', (data) => {
+      buffer += data;
+      
+      // Clear previous timeout
+      if (bufferTimeout) {
+        clearTimeout(bufferTimeout);
       }
+      
+      // Send buffered data every 16ms (60fps) or when buffer is large
+      bufferTimeout = setTimeout(() => {
+        if (buffer && ws.readyState === WebSocket.OPEN) {
+          ws.send(buffer);
+          buffer = '';
+        }
+      }, buffer.length > 1000 ? 0 : 16);
     });
 
     // Handle PTY exit
-    terminal.on('exit', (code, signal) => {
+    ptyProcess.on('exit', (code, signal) => {
       console.log(`Terminal exited with code ${code}, signal ${signal}`);
-      terminal = null;
       if (ws.readyState === WebSocket.OPEN) {
+        ws.send('\r\n\x1b[1;31mTerminal session ended.\x1b[0m\r\n');
         ws.close();
       }
     });
+
+  } catch (err) {
+    console.error('Error spawning PTY:', err);
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send('\r\n\x1b[1;31mError: Failed to start terminal session.\x1b[0m\r\n');
+      ws.close();
+    }
+    return;
   }
 
   // WebSocket input -> PTY
@@ -111,14 +153,17 @@ wss.on('connection', (ws) => {
       // Check if it's a resize message
       if (data.startsWith('{"type":"resize"')) {
         const msg = JSON.parse(data);
-        if (msg.cols && msg.rows && terminal) {
-          terminal.resize(msg.cols, msg.rows);
+        if (msg.cols && msg.rows && ptyProcess) {
+          ptyProcess.resize(msg.cols, msg.rows);
           console.log(`Terminal resized to ${msg.cols}x${msg.rows}`);
         }
+      } else if (data.startsWith('{"type":"theme"')) {
+        // Theme change message (no action needed server-side)
+        return;
       } else {
         // Regular terminal input
-        if (terminal) {
-          terminal.write(data);
+        if (ptyProcess) {
+          ptyProcess.write(data);
         }
       }
     } catch (err) {
@@ -129,13 +174,20 @@ wss.on('connection', (ws) => {
   // Handle WebSocket close
   ws.on('close', () => {
     console.log('Client disconnected');
-    // Keep terminal alive for reconnection
-    // In production, might want to kill after timeout
+    // Clean up PTY process
+    if (ptyProcess) {
+      ptyProcess.kill();
+      ptyProcess = null;
+    }
   });
 
   // Handle WebSocket errors
   ws.on('error', (err) => {
     console.error('WebSocket error:', err);
+    if (ptyProcess) {
+      ptyProcess.kill();
+      ptyProcess = null;
+    }
   });
 });
 

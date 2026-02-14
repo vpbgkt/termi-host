@@ -13,7 +13,14 @@
       <h1>🖥️ termi-host</h1>
       <p class="tagline">Web-based Terminal Access</p>
     </div>
-    <div style="display: flex; gap: 2rem; align-items: center;">
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <select id="themeSelector" style="background: #2d2d2d; color: #d4d4d4; border: 1px solid #404040; padding: 0.5rem; border-radius: 4px; cursor: pointer;">
+        <option value="default">Default</option>
+        <option value="dracula">Dracula</option>
+        <option value="monokai">Monokai</option>
+        <option value="one-dark">One Dark</option>
+        <option value="solarized">Solarized</option>
+      </select>
       <div id="status">
         <span id="status-indicator" class="status-disconnected">●</span>
         <span id="status-text">Disconnected</span>
@@ -33,6 +40,8 @@
       <span>Press <kbd>Ctrl+C</kbd> to interrupt</span>
       <span>•</span>
       <span>Right-click to paste</span>
+      <span>•</span>
+      <span id="latency" style="color: #4ec9b0;">Latency: --ms</span>
     </div>
     <div class="credits">
       <a href="https://github.com/vpbgkt/termi-host" target="_blank">GitHub</a>
@@ -42,6 +51,7 @@
   <!-- xterm.js -->
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script src="/themes.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
