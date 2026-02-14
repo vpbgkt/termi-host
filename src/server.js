@@ -52,7 +52,7 @@ const SESSION_SECRET = config.get('authentication.sessionSecret') || 'termi-host
 
 const sessionConfig = {
   secret: SESSION_SECRET,
-  resave: false,
+  resave: true,  // Changed to true to ensure session is saved
   saveUninitialized: false,
   cookie: {
     secure: false, // Set to true if using HTTPS
