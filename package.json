@@ -9,15 +9,28 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "terminal",
     "web-terminal",
+    "browser-terminal",
+    "online-terminal",
+    "web-ssh",
+    "browser-ssh",
+    "remote-terminal",
+    "terminal-emulator",
     "xterm",
     "pty",
     "websocket",
-    "web-based-terminal"
+    "shell",
+    "console",
+    "vps",
+    "server-management",
+    "remote-access",
+    "ssh-client",
+    "web-console",
+    "terminal-server",
+    "cloud-terminal"
   ],
   "author": "vpbgkt",
-  "license": "ISC",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/vpbgkt/termi-host.git"

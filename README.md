@@ -1,57 +1,150 @@
 # termi-host
 
-> Access your terminal from anywhere through a web browser
+<div align="center">
 
-**termi-host** is an open-source web-based terminal hosting solution that allows you to access your VPS terminal through any web browser without installing additional software. Perfect for accessing your terminal on TVs, tablets, public computers, or any device with a browser.
+![termi-host logo](https://img.shields.io/badge/termi--host-Web%20Terminal-4ec9b0?style=for-the-badge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node.js-%3E%3D18.0.0-brightgreen?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
 
-## ✨ Features
+**Free and Open Source Web-Based Terminal Access**
 
-- 🌐 **Web-based Access**: Access your terminal from any browser
-- 🔒 **Optional Authentication**: Secure your terminal with password/token authentication
-- 🎨 **Modern Interface**: Built with xterm.js for a full-featured terminal experience
-- ⚡ **Real-time**: WebSocket-based communication for instant response
-- 🔧 **Configurable**: Easy configuration through JSON files
-- 🚀 **Lightweight**: Minimal resource usage, perfect for VPS environments
-- 📱 **Responsive**: Works on desktop, tablet, and mobile devices
+*Access your VPS/server terminal from any browser, anywhere in the world*
+
+[**🚀 Live Demo**](http://159.65.151.238:3000) | [**📖 Documentation**](docs/CONFIGURATION.md) | [**🐛 Report Bug**](https://github.com/vpbgkt/termi-host/issues) | [**✨ Request Feature**](https://github.com/vpbgkt/termi-host/issues)
+
+</div>
+
+---
+
+## 🎯 What is termi-host?
+
+**termi-host** is a free, open-source web-based terminal solution that lets you access your server terminal through any web browser. No SSH client installation needed. Perfect for:
+
+- 📱 Accessing servers from mobile devices
+- 📺 Using terminals on smart TVs
+- 💻 Managing servers from public computers without SSH clients
+- 🌍 Remote server administration from anywhere
+- 🎓 Educational environments and coding tutorials
+- 🏢 Team collaboration and pair programming
+
+## ✨ Key Features
+
+### 🌟 Core Features
+- 🌐 **Browser-Based Terminal**: No SSH client needed - works in Chrome, Firefox, Safari, Edge
+- 🔒 **Optional Authentication**: Built-in password protection (configurable)
+- ⚡ **Real-time Communication**: WebSocket-based for instant command execution
+- 🎨 **Modern UI**: Beautiful terminal interface powered by xterm.js
+- 📱 **Fully Responsive**: Works seamlessly on desktop, tablet, and mobile
+- 🚀 **Lightweight**: Minimal resource footprint (~50MB RAM)
+- 🔧 **Easy Configuration**: JSON-based config with environment variable support
+- 🐚 **Multi-Shell Support**: Works with bash, zsh, sh, and more
+- 🎯 **Zero Dependencies**: Just Node.js - no database or additional services needed
+
+### 🛠️ Technical Features
+- 📦 **Easy Deployment**: Single command installation
+- 🔄 **Auto-Reconnect**: Automatic reconnection on network issues
+- 🖥️ **PTY Support**: Full pseudo-terminal with proper signal handling
+- 🎨 **Terminal Colors**: Full ANSI color support
+- ⌨️ **Special Keys**: All keyboard shortcuts work (Ctrl+C, Ctrl+Z, etc.)
+- 📐 **Dynamic Resize**: Terminal auto-resizes with browser window
+- 🔐 **SELinux Compatible**: Works with security-enhanced Linux
+- 📊 **Systemd Integration**: Run as a system service with auto-restart
 
 ## 🚀 Quick Start
 
+### One-Line Install
+
 ```bash
-# Clone the repository
+git clone https://github.com/vpbgkt/termi-host.git && cd termi-host && npm install && npm start
+```
+
+Then open `http://YOUR_SERVER_IP:3000` in any browser!
+
+### Step-by-Step
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/vpbgkt/termi-host.git
+cd termi-host
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the server
+npm start
+```
+
+**That's it!** Open your browser to:
+- Local: `http://localhost:3000`
+- Remote: `http://YOUR_SERVER_IP:3000`
+
+## 📦 Installation
+
+### Prerequisites
+
+- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
+- **npm** (comes with Node.js)
+- **Operating System**: Linux, macOS, or Windows with WSL
+- **Build tools** (for node-pty compilation):
+  - Linux: `build-essential python3`
+  - macOS: Xcode Command Line Tools
+  - Windows: Visual Studio Build Tools
+
+### Install Dependencies (Linux/Ubuntu/Debian)
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install -y nodejs npm build-essential python3
+
+# CentOS/RHEL/AlmaLinux
+sudo yum groupinstall -y "Development Tools"
+sudo yum install -y nodejs npm python3
+```
+
+### Install termi-host
+
+```bash
+# Clone repository
 git clone https://github.com/vpbgkt/termi-host.git
 cd termi-host
 
 # Install dependencies
 npm install
 
-# Start the server
+# Start server
 npm start
 ```
 
-Then open your browser to `http://localhost:3000`
-
-## 📦 Installation
-
-### Prerequisites
-
-- Node.js 18.0.0 or higher
-- npm or yarn
-- Linux, macOS, or Windows with WSL
-
-### Install from npm (Coming Soon)
+### Install as System Service (Linux)
 
 ```bash
-npm install -g termi-host
-termi-host
-```
+# Create systemd service
+sudo tee /etc/systemd/system/termi-host.service > /dev/null <<EOF
+[Unit]
+Description=termi-host Web Terminal
+After=network.target
 
-### Install from Source
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/termi-host
+ExecStart=/usr/bin/node /root/termi-host/src/server.js
+Restart=always
+RestartSec=10
 
-```bash
-git clone https://github.com/vpbgkt/termi-host.git
-cd termi-host
-npm install
-npm start
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable termi-host
+sudo systemctl start termi-host
+
+# Check status
+sudo systemctl status termi-host
 ```
 
 ## ⚙️ Configuration
@@ -166,19 +259,77 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines (Coming Soon).
 - [ ] Docker image
 - [ ] npm package
 
-## 📜 License
+## 🌟 Use Cases
 
-ISC
+- **Remote Server Management**: Access your VPS from anywhere
+- **DevOps & SysAdmin**: Quick server access without SSH client
+- **Education**: Teaching Linux/command-line to students
+- **IoT & Embedded**: Access Raspberry Pi and embedded devices
+- **Emergency Access**: When you don't have your SSH keys
+- **Mobile Administration**: Manage servers from your phone
+- **Team Collaboration**: Share terminal access with team members
+- **Customer Support**: Help users debug issues remotely
 
-## 👤 Author
+## 🔍 Keywords
 
-Created by [@vpbgkt](https://github.com/vpbgkt)
+web terminal, browser terminal, online terminal, web ssh, browser ssh, remote terminal access, web-based terminal, online ssh client, terminal emulator, xterm.js, node-pty, websocket terminal, cloud terminal, vps terminal, server terminal, linux terminal browser, terminal web interface, ssh web client, web console, remote shell access
 
-## 🔗 Links
+## 📊 Comparison
 
-- [GitHub Repository](https://github.com/vpbgkt/termi-host)
-- [Report Issues](https://github.com/vpbgkt/termi-host/issues)
-- [npm Package](https://www.npmjs.com/package/termi-host) (Coming Soon)
+| Feature | termi-host | ttyd | wetty | shellinabox |
+|---------|-----------|------|-------|-------------|
+| Installation | ⭐ Easy | Medium | Medium | Medium |
+| Dependencies | Node.js only | C/libwebsockets | Node.js | C/OpenSSL |
+| Authentication | ✅ Optional | ✅ Yes | ✅ Yes | ✅ Yes |
+| Configuration | ✅ JSON/Env | Command-line | Command-line | Command-line |
+| WebSocket | ✅ Yes | ✅ Yes | ✅ Yes | No |
+| Mobile Support | ✅ Excellent | Good | Good | Fair |
+| Active Development | ✅ Active | Active | Active | Inactive |
+
+## 🤝 Contributing
+
+Contributions are welcome! We're planning implementations in multiple languages.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+**Roadmap:**
+- [x] Node.js implementation
+- [ ] Python implementation
+- [ ] Go implementation
+- [ ] Rust implementation
+- [ ] Docker image
+- [ ] npm package
+- [ ] Multi-session support
+- [ ] File upload/download
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+**Free and open source forever!** ❤️
+
+## 👥 Author & Contributors
+
+Created with ❤️ by [@vpbgkt](https://github.com/vpbgkt)
+
+Want to contribute? Check out [CONTRIBUTING.md](CONTRIBUTING.md)!
+
+## 🔗 Links & Resources
+
+- 🏠 [GitHub Repository](https://github.com/vpbgkt/termi-host)
+- 🐛 [Report Issues](https://github.com/vpbgkt/termi-host/issues)
+- 💬 [Discussions](https://github.com/vpbgkt/termi-host/discussions)
+- 📦 [npm Package](https://www.npmjs.com/package/termi-host) (Coming Soon)
+- 🎥 [Video Tutorial](https://github.com/vpbgkt/termi-host) (Coming Soon)
+
+## ⭐ Show Your Support
+
+If you find termi-host useful, please consider:
+- ⭐ **Star this repository** on GitHub
+- 🐛 **Report bugs** to help improve
+- 💡 **Suggest features** you'd like to see
+- 📢 **Share** with others who might find it useful
+- 🤝 **Contribute** code or documentation
 
 ## 🌟 Acknowledgments
 
