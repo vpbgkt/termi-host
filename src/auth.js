@@ -64,6 +64,18 @@ router.post('/logout', (req, res) => {
   });
 });
 
+// Shutdown server endpoint (authenticated only)
+router.post('/shutdown', requireAuth, (req, res) => {
+  console.log('Shutdown request received from:', req.session.username);
+  res.json({ success: true, message: 'Server shutting down...' });
+  
+  // Give time for response to be sent
+  setTimeout(() => {
+    console.log('Server shutdown initiated by web interface');
+    process.exit(0);
+  }, 1000);
+});
+
 // Check auth status
 router.get('/status', (req, res) => {
   const config = require('./config');

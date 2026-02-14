@@ -168,11 +168,46 @@ fetch('/api/auth/status')
   .then(data => {
     if (data.authEnabled && data.authenticated) {
       const logoutBtn = document.getElementById('logoutBtn');
-      logoutBtn.style.display = 'block';
-      logoutBtn.onclick = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login.html';
-      };
+      const shutdownBtn = document.getElementById('shutdownBtn');
+      
+      if (logoutBtn) {
+        logoutBtn.style.display = 'block';
+        logoutBtn.onclick = async () => {
+          if (confirm('Are you sure you want to logout?')) {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login.html';
+          }
+        };
+      }
+      
+      if (shutdownBtn) {
+        shutdownBtn.style.display = 'block';
+        shutdownBtn.onclick = async () => {
+          if (confirm('⚠️ WARNING: This will shutdown the entire server!\n\nAll active sessions will be terminated.\n\nAre you absolutely sure?')) {
+            // Double confirmation for critical action
+            if (confirm('This action cannot be undone. The server will stop completely.\n\nClick OK to confirm shutdown.')) {
+              shutdownBtn.disabled = true;
+              shutdownBtn.textContent = 'Shutting down...';
+              shutdownBtn.style.background = '#6c757d';
+              
+              try {
+                const response = await fetch('/api/auth/shutdown', { method: 'POST' });
+                const data = await response.json();
+                alert('Server is shutting down. You will be disconnected.');
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 2000);
+              } catch (err) {
+                console.error('Shutdown request failed:', err);
+                alert('Server shutdown initiated. Connection will close shortly.');
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 2000);
+              }
+            }
+          }
+        };
+      }
     }
   });
 
