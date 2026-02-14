@@ -74,9 +74,9 @@ let terminal = null;
 
 // WebSocket upgrade handler with authentication
 server.on('upgrade', (request, socket, head) => {
-  // Parse cookies first
+  // Parse cookies first - pass the secret if cookies are signed
   const cookieParser = require('cookie-parser');
-  cookieParser()(request, {}, () => {
+  cookieParser(SESSION_SECRET)(request, {}, () => {
     // Then parse session using SAME config as HTTP server
     const sessionParser = session(sessionConfig);
 
@@ -86,7 +86,7 @@ server.on('upgrade', (request, socket, head) => {
         sessionID: request.sessionID,
         isAuthenticated: request.session?.authenticated,
         authEnabled: AUTH_ENABLED,
-        cookie: request.headers.cookie
+        cookieHeader: request.headers.cookie
       });
 
       if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
