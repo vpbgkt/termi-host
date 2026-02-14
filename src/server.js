@@ -61,7 +61,10 @@ const sessionConfig = {
   }
 };
 
-app.use(session(sessionConfig));
+// Create a single session middleware instance to share the MemoryStore
+const sessionMiddleware = session(sessionConfig);
+
+app.use(sessionMiddleware);
 
 // Auth routes
 app.use('/api/auth', authRouter);
@@ -74,32 +77,26 @@ let terminal = null;
 
 // WebSocket upgrade handler with authentication
 server.on('upgrade', (request, socket, head) => {
-  // Parse cookies first - pass the secret if cookies are signed
-  const cookieParser = require('cookie-parser');
-  cookieParser(SESSION_SECRET)(request, {}, () => {
-    // Then parse session using SAME config as HTTP server
-    const sessionParser = session(sessionConfig);
+  // Use the SAME session middleware instance to share the session store
+  sessionMiddleware(request, {}, () => {
+    console.log('WebSocket upgrade - Session check:', {
+      hasSession: !!request.session,
+      sessionID: request.sessionID,
+      isAuthenticated: request.session?.authenticated,
+      authEnabled: AUTH_ENABLED,
+      cookieHeader: request.headers.cookie
+    });
 
-    sessionParser(request, {}, () => {
-      console.log('WebSocket upgrade - Session check:', {
-        hasSession: !!request.session,
-        sessionID: request.sessionID,
-        isAuthenticated: request.session?.authenticated,
-        authEnabled: AUTH_ENABLED,
-        cookieHeader: request.headers.cookie
-      });
+    if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
+      console.log('WebSocket upgrade denied - not authenticated');
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
 
-      if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
-        console.log('WebSocket upgrade denied - not authenticated');
-        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-        socket.destroy();
-        return;
-      }
-
-      console.log('WebSocket upgrade accepted - authenticated');
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-      });
+    console.log('WebSocket upgrade accepted - authenticated');
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
     });
   });
 });
