@@ -145,8 +145,36 @@ document.getElementById('terminal-container').addEventListener('click', () => {
 // Auto-focus terminal on load
 terminal.focus();
 
-// Connect to server
-connect();
+// Logout button
+fetch('/api/auth/status')
+  .then(res => res.json())
+  .then(data => {
+    if (data.authEnabled && data.authenticated) {
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn.style.display = 'block';
+      logoutBtn.onclick = async () => {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login.html';
+      };
+    }
+  });
 
-// Show welcome message
-terminal.write('\x1b[1;32mConnecting to terminal...\x1b[0m\r\n');
+// Check authentication before connecting
+fetch('/api/auth/status')
+  .then(res => res.json())
+  .then(data => {
+    if (data.authEnabled && !data.authenticated) {
+      window.location.href = '/login.html';
+      return;
+    }
+    // Connect to server
+    connect();
+    // Show welcome message
+    if (data.username) {
+      terminal.write(`\x1b[1;32mWelcome, ${data.username}!\x1b[0m\r\n`);
+    }
+    terminal.write('\x1b[1;32mConnecting to terminal...\x1b[0m\r\n');
+  })
+  .catch(err => {
+    terminal.write('\x1b[1;31mAuthentication check failed\x1b[0m\r\n');
+  });

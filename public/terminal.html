@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>termi-host - Redirecting...</title>
+  <script>
+    // Check auth status and redirect
+    fetch('/api/auth/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.authEnabled && !data.authenticated) {
+          window.location.href = '/login.html';
+        } else {
+          window.location.href = '/terminal.html';
+        }
+      })
+      .catch(() => {
+        window.location.href = '/login.html';
+      });
+  </script>
+</head>
+<body>
+  <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #1e1e1e; color: #4ec9b0; font-family: monospace;">
+    <div style="text-align: center;">
+      <h1>Loading...</h1>
+      <p>Checking authentication...</p>
+    </div>
+  </div>
+</body>
+</html>

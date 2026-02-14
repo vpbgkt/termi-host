@@ -11,9 +11,10 @@
     "cwd": null
   },
   "authentication": {
-    "enabled": false,
+    "enabled": true,
     "username": "admin",
-    "password": "changeme"
+    "password": "changeme",
+    "sessionSecret": "change-this-to-random-string"
   },
   "security": {
     "allowOrigins": ["*"],

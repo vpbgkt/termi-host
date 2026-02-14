@@ -188,17 +188,39 @@ PORT=8080 AUTH_ENABLED=true AUTH_PASSWORD=secret npm start
 
 See [Configuration Guide](docs/CONFIGURATION.md) for detailed options.
 
-## 🔐 Security
+## 🔒 Security
 
-⚠️ **IMPORTANT**: termi-host exposes terminal access through a web interface. 
+⚠️ **Authentication is now ENABLED by default!**
 
-**Security Best Practices:**
+**Default credentials (CHANGE THESE!):**
+- Username: `admin`
+- Password: `changeme`
 
-1. **Enable authentication** in production
-2. **Use HTTPS** (via reverse proxy like nginx)
-3. **Use strong passwords** (16+ characters)
-4. **Restrict access** with firewall rules
-5. **Don't expose to public internet** without authentication
+**To change credentials:**
+
+1. Create `config/local.json`:
+   ```json
+   {
+     "authentication": {
+       "enabled": true,
+       "username": "your-username",
+       "password": "your-strong-password",
+       "sessionSecret": "generate-random-string-here"
+     }
+   }
+   ```
+
+2. Restart the server:
+   ```bash
+   npm start
+   # OR if using systemd:
+   sudo systemctl restart termi-host
+   ```
+
+**Generate a secure session secret:**
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
 ### Example: Secure Setup with nginx
 
