@@ -48,8 +48,10 @@ const loginLimiter = rateLimit({
 app.use('/api/auth/login', loginLimiter);
 
 // Session configuration with timeout
-app.use(session({
-  secret: config.get('authentication.sessionSecret') || 'termi-host-secret-' + Math.random().toString(36),
+const SESSION_SECRET = config.get('authentication.sessionSecret') || 'termi-host-secret-' + Math.random().toString(36);
+
+const sessionConfig = {
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -57,7 +59,9 @@ app.use(session({
     httpOnly: true,
     maxAge: 30 * 60 * 1000 // 30 minutes session timeout
   }
-}));
+};
+
+app.use(session(sessionConfig));
 
 // Auth routes
 app.use('/api/auth', authRouter);
@@ -73,14 +77,16 @@ server.on('upgrade', (request, socket, head) => {
   // Parse cookies first
   const cookieParser = require('cookie-parser');
   cookieParser()(request, {}, () => {
-    // Then parse session
-    const sessionParser = session({
-      secret: config.get('authentication.sessionSecret') || 'termi-host-secret-' + Math.random().toString(36),
-      resave: false,
-      saveUninitialized: false
-    });
+    // Then parse session using SAME config as HTTP server
+    const sessionParser = session(sessionConfig);
 
     sessionParser(request, {}, () => {
+      console.log('WebSocket upgrade - Session check:', {
+        hasSession: !!request.session,
+        isAuthenticated: request.session?.authenticated,
+        authEnabled: AUTH_ENABLED
+      });
+
       if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
         console.log('WebSocket upgrade denied - not authenticated');
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
