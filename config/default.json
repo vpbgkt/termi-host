@@ -8,7 +8,7 @@
     "cols": 80,
     "rows": 24,
     "scrollback": 1000,
-    "cwd": null
+    "cwd": "/root"
   },
   "authentication": {
     "enabled": true,

@@ -83,8 +83,10 @@ server.on('upgrade', (request, socket, head) => {
     sessionParser(request, {}, () => {
       console.log('WebSocket upgrade - Session check:', {
         hasSession: !!request.session,
+        sessionID: request.sessionID,
         isAuthenticated: request.session?.authenticated,
-        authEnabled: AUTH_ENABLED
+        authEnabled: AUTH_ENABLED,
+        cookie: request.headers.cookie
       });
 
       if (AUTH_ENABLED && (!request.session || !request.session.authenticated)) {
@@ -110,34 +112,31 @@ wss.on('connection', (ws) => {
 
   // Spawn PTY for this connection (lightweight)
   try {
-    console.log(`Spawning shell: ${SHELL}`);
+    const cwd = CWD || process.env.HOME || '/';
+    console.log(`Spawning shell: ${SHELL} in ${cwd}`);
+    
     ptyProcess = pty.spawn(SHELL, [], {
       name: 'xterm-color',
       cols: TERMINAL_COLS,
       rows: TERMINAL_ROWS,
-      cwd: CWD,
+      cwd: cwd,
       env: process.env
     });
+    
+    console.log(`PTY spawned successfully with PID: ${ptyProcess.pid}`);
 
     // PTY output -> WebSocket (with buffering for performance)
     let buffer = '';
     let bufferTimeout = null;
 
     ptyProcess.on('data', (data) => {
-      buffer += data;
-      
-      // Clear previous timeout
-      if (bufferTimeout) {
-        clearTimeout(bufferTimeout);
-      }
-      
-      // Send buffered data every 16ms (60fps) or when buffer is large
-      bufferTimeout = setTimeout(() => {
-        if (buffer && ws.readyState === WebSocket.OPEN) {
-          ws.send(buffer);
-          buffer = '';
+      try {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(data);
         }
-      }, buffer.length > 1000 ? 0 : 16);
+      } catch (ex) {
+        console.error('Error sending PTY data to WebSocket:', ex);
+      }
     });
 
     // Handle PTY exit
