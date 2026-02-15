@@ -96,7 +96,7 @@ npm start
 
 **Default Login:**
 - Username: `admin`
-- Password: `changeme` (⚠️ CHANGE THIS!)
+- Password: `admin` (⚠️ CHANGE THIS!)
 
 ## 📦 Installation
 
@@ -264,7 +264,7 @@ Edit `config/local.json`:
   "authentication": {
     "enabled": false,
     "username": "admin",
-    "password": "changeme"
+    "password": "admin"
   }
 }
 ```
@@ -305,7 +305,7 @@ sudo journalctl -u termi-host -f
 
 **Default credentials (CHANGE THESE!):**
 - Username: `admin`
-- Password: `changeme`
+- Password: `admin`
 
 **To change credentials:**
 

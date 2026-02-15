@@ -10,7 +10,7 @@
   },
   "authentication": {
     "enabled": true,
-    "username": "myuser",
-    "password": "supersecurepassword123"
+    "username": "admin",
+    "password": "admin"
   }
 }

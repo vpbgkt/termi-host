@@ -186,13 +186,13 @@ create_default_config() {
   "authentication": {
     "enabled": true,
     "username": "admin",
-    "password": "changeme",
+    "password": "admin",
     "sessionSecret": "$SESSION_SECRET"
   }
 }
 EOF
         print_success "Configuration file created at config/local.json"
-        print_warning "Default credentials: username=admin, password=changeme"
+        print_warning "Default credentials: username=admin, password=admin"
         print_warning "PLEASE CHANGE THE PASSWORD in config/local.json!"
     else
         print_info "Configuration file already exists, skipping..."
@@ -217,7 +217,7 @@ show_completion_message() {
     echo ""
     echo "3. Login with default credentials:"
     echo -e "   Username: ${YELLOW}admin${NC}"
-    echo -e "   Password: ${YELLOW}changeme${NC}"
+    echo -e "   Password: ${YELLOW}admin${NC}"
     echo ""
     echo -e "${RED}⚠ IMPORTANT: Change the default password in config/local.json${NC}"
     echo ""
