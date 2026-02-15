@@ -11,7 +11,7 @@
 
 *Access your VPS/server terminal from any browser, anywhere in the world*
 
-[**🚀 Live Demo**](http://159.65.151.238:3000) | [**📖 Documentation**](docs/CONFIGURATION.md) | [**🐛 Report Bug**](https://github.com/vpbgkt/termi-host/issues) | [**✨ Request Feature**](https://github.com/vpbgkt/termi-host/issues)
+[**🚀 Live Demo**](http://159.65.151.238:3000) | [**📖 Documentation**](docs/CONFIGURATION.md) | [**🔧 Troubleshooting**](docs/TROUBLESHOOTING.md) | [**🐛 Report Bug**](https://github.com/vpbgkt/termi-host/issues) | [**✨ Request Feature**](https://github.com/vpbgkt/termi-host/issues)
 
 </div>
 
@@ -53,23 +53,38 @@
 
 ## 🚀 Quick Start
 
-### One-Line Install
+### Automated Installation (Recommended)
+
+The easiest way to get started is using our automated installation script:
 
 ```bash
-git clone https://github.com/vpbgkt/termi-host.git && cd termi-host && npm install && npm start
+# Clone and install with one command
+git clone https://github.com/vpbgkt/termi-host.git && cd termi-host && bash install.sh
 ```
 
-Then open `http://YOUR_SERVER_IP:3000` in any browser!
+The script will:
+- ✅ Check your Node.js version (and install Node.js 20 if needed)
+- ✅ Install build tools required for node-pty
+- ✅ Install all npm dependencies automatically
+- ✅ Create default configuration file
+- ✅ Generate secure session secret
 
-### Step-by-Step
+Then start the server:
+```bash
+npm start
+```
+
+### Manual Installation
+
+If you prefer manual installation:
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/vpbgkt/termi-host.git
 cd termi-host
 
-# 2. Install dependencies
-npm install
+# 2. Run the installation script
+bash install.sh
 
 # 3. Start the server
 npm start
@@ -79,31 +94,41 @@ npm start
 - Local: `http://localhost:3000`
 - Remote: `http://YOUR_SERVER_IP:3000`
 
+**Default Login:**
+- Username: `admin`
+- Password: `changeme` (⚠️ CHANGE THIS!)
+
 ## 📦 Installation
 
-### Prerequisites
+### Automated Installation Script
 
-- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
-- **npm** (comes with Node.js)
-- **Operating System**: Linux, macOS, or Windows with WSL
-- **Build tools** (for node-pty compilation):
-  - Linux: `build-essential python3`
-  - macOS: Xcode Command Line Tools
-  - Windows: Visual Studio Build Tools
-
-### Install Dependencies (Linux/Ubuntu/Debian)
+**The easiest and recommended method:**
 
 ```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install -y nodejs npm build-essential python3
-
-# CentOS/RHEL/AlmaLinux
-sudo yum groupinstall -y "Development Tools"
-sudo yum install -y nodejs npm python3
+# Clone and run installation script
+git clone https://github.com/vpbgkt/termi-host.git
+cd termi-host
+bash install.sh
 ```
 
-### Install termi-host
+The `install.sh` script will:
+1. ✅ Detect your operating system
+2. ✅ Check Node.js version (requires >= 18.0.0)
+3. ✅ Offer to install Node.js 20 LTS if needed
+4. ✅ Install build tools (gcc, make, python3) if missing
+5. ✅ Install all npm dependencies
+6. ✅ Create default configuration with secure session secret
+7. ✅ Display next steps and access information
+
+**Supported Operating Systems:**
+- Ubuntu/Debian
+- CentOS/RHEL/AlmaLinux/Rocky Linux
+- Fedora
+- Other Linux distributions (with manual Node.js installation)
+
+### Manual Installation
+
+If you already have Node.js >= 18.0.0 and build tools installed:
 
 ```bash
 # Clone repository
@@ -113,26 +138,72 @@ cd termi-host
 # Install dependencies
 npm install
 
+# Create configuration (optional, will use defaults)
+cp config/local.json.example config/local.json
+
 # Start server
 npm start
 ```
 
+### Prerequisites (Manual Setup)
+
+- **Node.js** 18.0.0 or higher ([Download](https://nodejs.org/))
+- **npm** (comes with Node.js)
+- **Operating System**: Linux, macOS, or Windows with WSL
+- **Build tools** (for node-pty compilation):
+  - Linux: `build-essential python3 make gcc g++`
+  - macOS: Xcode Command Line Tools
+  - Windows: Visual Studio Build Tools
+
+### Install Build Tools Manually
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install -y build-essential python3 make g++
+
+# CentOS/RHEL/AlmaLinux
+sudo yum groupinstall -y "Development Tools"
+sudo yum install -y python3 make gcc gcc-c++
+
+# Fedora
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y python3 make gcc gcc-c++
+```
+
 ### Install as System Service (Linux)
+
+**Using the installation script (recommended):**
+
+```bash
+sudo bash install.sh --service
+```
+
+This will automatically:
+- Create systemd service file
+- Enable service to start on boot
+- Start the service immediately
+- Display service status and management commands
+
+**Manual service installation:**
 
 ```bash
 # Create systemd service
 sudo tee /etc/systemd/system/termi-host.service > /dev/null <<EOF
 [Unit]
 Description=termi-host Web Terminal
+Documentation=https://github.com/vpbgkt/termi-host
 After=network.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/root/termi-host
-ExecStart=/usr/bin/node /root/termi-host/src/server.js
+WorkingDirectory=$(pwd)
+ExecStart=$(which node) $(pwd)/src/server.js
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -145,6 +216,24 @@ sudo systemctl start termi-host
 
 # Check status
 sudo systemctl status termi-host
+```
+
+**Service Management Commands:**
+```bash
+# Start service
+sudo systemctl start termi-host
+
+# Stop service
+sudo systemctl stop termi-host
+
+# Restart service
+sudo systemctl restart termi-host
+
+# Check status
+sudo systemctl status termi-host
+
+# View logs
+sudo journalctl -u termi-host -f
 ```
 
 ## ⚙️ Configuration
@@ -187,6 +276,28 @@ PORT=8080 AUTH_ENABLED=true AUTH_PASSWORD=secret npm start
 ```
 
 See [Configuration Guide](docs/CONFIGURATION.md) for detailed options.
+
+## ❓ Troubleshooting
+
+Having issues? Check our [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for:
+- Node.js version problems
+- Build tool errors
+- Module not found errors
+- Connection issues
+- And more...
+
+Common quick fixes:
+```bash
+# Reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
+
+# Use automated installer
+bash install.sh
+
+# Check logs (if running as service)
+sudo journalctl -u termi-host -f
+```
 
 ## 🔒 Security
 
@@ -258,6 +369,7 @@ npm run dev
 ## 📖 Documentation
 
 - [Configuration Guide](docs/CONFIGURATION.md)
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
 - [Security Best Practices](docs/SECURITY.md) (Coming Soon)
 - [API Documentation](docs/API.md) (Coming Soon)
 
